@@ -1,2 +1,2 @@
 # SDIGroup4
-God help us
+This is a test file
