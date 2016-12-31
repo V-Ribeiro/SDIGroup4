@@ -1,4 +1,5 @@
 import processing.video.*;
+import processing.sound.*;
 
 // Variable for capture device
 Capture video;
@@ -6,7 +7,7 @@ Capture video;
 PImage prevFrame;
 PImage photo;
 PGraphics graphicalMask;
-
+SoundFile song;
 
 // How different must a pixel be to be a "motion" pixel
 float threshold = 50;
@@ -15,11 +16,15 @@ float positionY;
 float radiusProportion = 0.1;
 float speed; 
 float gravity;
+float volume = 0;
 
 int iw, ih;
 
 void setup() {
     photo = loadImage("img1.png");
+    song = new SoundFile(this, "22.mp3");
+    song.loop();
+    song.amp(0);
     
     iw = photo.width;
     ih = photo.height;
@@ -113,7 +118,12 @@ void draw() {
         println(totalMotion);
       }
     if (totalMotion > 5000000.0) {
-      meterEfeito();
+      meterEfeito(); 
+      volume = totalMotion / 1000000.0;
+      song.amp(volume);
+    } else { 
+      song.amp(0);   
+
     }
 }
 
