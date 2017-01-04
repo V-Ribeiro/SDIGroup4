@@ -1,27 +1,26 @@
+import gab.opencv.*;
 import processing.video.*;
 
-// Variable for capture devices
-Capture video1;
-Capture video2;
-// Previous Frame
-PImage prevFrame_video1;
-PImage prevFrame_video2;
 
-// How different must a pixel be to be a "motion" pixel
-float threshold = 50;
-float positionX;
-float positionY;
-float radiusProportion = 0.1;
-float speed; 
-float gravity;
+DisplayConsumer display;
+FeedProducer camerafeed;
+FeedProducer anothercamerafeed;
+FrameDiffConsumer frameDiff;
+String cameraName= "name=ASUS USB2.0 WebCam,size=640x480,fps=30";
+String cameraName2 = "name=Logitech QuickCam Express/Go,size=640x480,fps=30";
+Ball ball;
+int recentMovement = 0;
+int totalMotion = 0;
+OpenCV cv;
 
 
 void setup() {
-  size(1280, 480);
+  size(640, 480);
+  
   String[] cameras = Capture.list();
     if (cameras == null) {
     println("Failed to retrieve the list of available cameras, will try the default...");
-    video1 = new Capture(this, 640, 480);
+   // FeedConsumer = ()
   } if (cameras.length == 0) {
     println("There are no cameras available for capture.");
     exit();
@@ -30,94 +29,65 @@ void setup() {
     printArray(cameras);
     // The camera can be initialized directly using an element
     // from the array returned by list():
-    video1 = new Capture(this, 640, 480);
-    //video2 = new Capture(this, 640, 480);
-    video2 = new Capture(this, cameras[14]);
-    // Or, the settings can be defined based on the text in the list
-    //cam = new Capture(this, 640, 480, "Built-in iSight", 30);
+    //name ? 
+    cv = new OpenCV(this, 640, 480);
+    camerafeed= new FeedProducer(new Capture(this, cameraName));
+    anothercamerafeed = new FeedProducer(new Capture(this,cameraName2));
+    ball = new Ball((int)(640/2),(int)(480/2));
+    ball.setRadius(30);
     
-    // Start capturing the images from the cameras
-    video1.start();
-    video2.start();
   }
-  // Create an empty image the same size as the video
-  prevFrame_video1 = createImage(video1.width, video1.height, RGB);
-  prevFrame_video2 = createImage(video2.width, video2.height, RGB);
-  positionX = width / 2;
-  positionY = height / 2;
-  speed = 0;
-  gravity = 0.07;
+
 }
-/*
+
+
 // New frame available from camera
 void captureEvent(Capture video) {
-  // Save previous frame for motion detection!!
-  prevFrame_video1.copy(video, 0, 0, video.width, video.height, 0, 0, video.width, video.height);
-  prevFrame_video1.updatePixels();
-  video.read();
-}
-*/
-void draw() {
-  background(0);
-
-  // You don't need to display it to analyze it!
-  image(video1, 0, 0);
-  image(video2, 640, 0);
-
-  video1.loadPixels();
-  video2.loadPixels();
-  
-  prevFrame_video1.loadPixels();
-  prevFrame_video2.loadPixels();
-
-  // Begin loop to walk through every pixel
-  // Start with a total of 0
-  float totalMotion = 0;
-
-  // Sum the brightness of each pixel
-  for (int i = 0; i < video1.pixels.length; i ++ ) {
-    // Step 2, what is the current color
-    color current = video1.pixels[i];
-
-    // Step 3, what is the previous color
-    color previous = prevFrame_video1.pixels[i];
-
-    // Step 4, compare colors (previous vs. current)
-    float r1 = red(current); 
-    float g1 = green(current);
-    float b1 = blue(current);
-    float r2 = red(previous); 
-    float g2 = green(previous);
-    float b2 = blue(previous);
-
-    // Motion for an individual pixel is the difference between the previous color and current color.
-    float diff = dist(r1, g1, b1, r2, g2, b2);
-    // totalMotion is the sum of all color differences. 
+  println("...");
+  if(camerafeed.video.equals(video))
+  {
+    print("0");
+    camerafeed.prevFrameImage.copy(video, 0, 0, video.width, video.height, 0, 0, video.width, video.height);
+    //camerafeed.prevFrameImage.updatePixels();
+    camerafeed.video.read();
+    //camerafeed.currFrameImage.copy(video,0,0,video.width, video.height,0,0,video.width,video.height);
+    int diff = camerafeed.frameDiff();
+    camerafeed.avgMotion = diff / camerafeed.video.pixels.length;
     totalMotion += diff;
+    println("average motion : 0 ||"+ camerafeed.avgMotion);
+  }else
+  {
+     print("1");
+    anothercamerafeed.prevFrameImage.copy(video, 0, 0, video.width, video.height, 0, 0, video.width, video.height);
+    //anothercamerafeed.prevFrameImage.updatePixels();
+    anothercamerafeed.video.read();
+    int diff = anothercamerafeed.frameDiff();
+    anothercamerafeed.avgMotion = diff / anothercamerafeed.video.pixels.length;
+    totalMotion += diff;
+    println("average motion : 1 ||"+ anothercamerafeed.avgMotion); 
+    //camerafeed.currFrameImage.copy(video,0,0,video.width, video.height,0,0,video.width,video.height);
   }
+}
 
-  // averageMotion is total motion divided by the number of pixels analyzed.
-  float avgMotion = totalMotion / video1.pixels.length; 
 
-  // Draw a circle based on average motion
-  noStroke();
-  fill(0);
-  float r = avgMotion * 2;
+void draw() {
+ display = new DisplayConsumer(camerafeed,anothercamerafeed);
+ display.mix(ball);
+       cv.loadImage(display.getImage());
+       cv.calculateOpticalFlow();
+         image(video, 0, 0);
+  translate(video.width,0);
+  stroke(255,0,0);
+  cv.drawOpticalFlow();
   
-    ellipse(positionX, positionY, r, r);  
-    positionY = positionY + speed;
-    speed = speed + gravity;
-      
-      // isto serve para alterar o positionY
-      if ( speed < 0.65 && positionY > height - width * radiusProportion) {
-        println("bottom");
-        speed = 0;
-        gravity = 0;
-      }
-      else if (positionY > height - width * radiusProportion) {
-        println(speed);
-        speed = speed * -0.65;
-        println("Change Direction");
-      } 
+  PVector aveFlow = c.getAverageFlow();
+  int flowScale = 50;
   
+  stroke(255);
+  strokeWeight(2);
+  line(240, 320, 240 + aveFlow.x*flowScale,320 + aveFlow.y*flowScale);
+
+ image(display.getImage(), 0, 0, width, height);
+     ball.draw();
+
 }
