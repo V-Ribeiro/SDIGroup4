@@ -1,5 +1,5 @@
 import processing.video.*;
-
+import gab.opencv.*;
 int port = 8000;
 
 PImage video; // received capture
@@ -20,6 +20,8 @@ float fR;
 //
 
 Capture cap;
+ImgProcessing pro;
+OpenCV cv ;
 
 void setup()
 {
@@ -29,6 +31,8 @@ void setup()
   textAlign(CENTER, CENTER);
   noFill();
   stroke(255);
+  cv = new cv(this,640,480);
+  pro = new ImgProcessing(cv);
   
   //initialize img
   video = createImage(640, 480, RGB);
