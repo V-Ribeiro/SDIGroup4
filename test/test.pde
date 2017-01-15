@@ -1,15 +1,16 @@
 import processing.video.*;
 import gab.opencv.*;
-int port = 8000;
 
-PImage video; // received capture
-PImage video2; // produced capture
-
-ReceiverThread receiver;
-
+//Mirror
 PFont font;
+int port = 8000;
+PImage mirror;
+Capture cap;
+ImgProcessing pro;
+OpenCV cv ;
+Boolean mirrorReady = false;
 
-//sender stuff
+//mirror must send and receive
 Movie movie;
 String fileName = "parameters.txt";
 String clientIP1;
@@ -19,9 +20,12 @@ long time;
 float fR;
 //
 
-Capture cap;
-ImgProcessing pro;
-OpenCV cv ;
+// Other images 
+PImage other;
+ReceiverThread receiver;
+
+
+
 
 void setup()
 {
@@ -31,12 +35,12 @@ void setup()
   textAlign(CENTER, CENTER);
   noFill();
   stroke(255);
-  cv = new cv(this,640,480);
-  pro = new ImgProcessing(cv);
-  
+  cv = new OpenCV(this,640,480);
+  cv.loadCascade(OpenCV.CASCADE_FRONTALFACE);
+  pro = new ImgProcessing(cv);  
   //initialize img
-  video = createImage(640, 480, RGB);
-  video2 = createImage(640, 480, RGB);
+  other = createImage(640, 480, RGB);
+  mirror = createImage(640, 480, RGB);
   
   //cap start
   cap = new Capture(this, 640,480);
@@ -50,6 +54,8 @@ void setup()
   catch (SocketException e) {
     e.printStackTrace();
   }
+
+  // start movie
   movie = new Movie(this, "test.avi");
   movie.loop();
   //
@@ -67,17 +73,39 @@ void movieEvent(Movie m) {
 
 void captureEvent(Capture m)
 {
+  mirrorReady = false;
   m.read();
-  video2.copy(m, 0, 0, video2.width, video2.height, 0, 0, video2.width, video2.height);
+ 
+  mirrorReady = true;
 }
 
 void draw()
 {
-  if (receiver.available()) {
-    video = receiver.getImage();
+  if (receiver.available()) { 
+      try
+      {
+        other.copy(receiver.getImage(),0, 0, other.width, other.height, 0, 0, other.width, other.height);
+       
+      }catch(Exception err)
+      {
+      
+      }
+        
   }
-  image(video, 0, 0);
-  image(video2,640,0);
+    if(mirrorReady)
+    {
+    mirror.copy(cap, 0, 0, mirror.width, mirror.height, 0, 0, mirror.width, mirror.height);
+    image(mirror,640,0);
+    pro.detect(mirror);
+    }
+    if(pro.faceDetected)
+    {
+        fill(240);
+        stroke(255,0,0);
+        rect( (float)pro.faceSquare.x + 640, (float)pro.faceSquare.y, (float)pro.faceSquare.getWidth() , (float)pro.faceSquare.getHeight() ); 
+    }
+  image(other,0,0);
+  
   
   text(receiver.getFr(), width / 2, height / 2);
 }
