@@ -9,7 +9,7 @@ PImage photo;
 PGraphics graphicalMask;
 SoundFile song;
 
-// How different must a pixel be to be a "motion" pixel
+// motion variables
 float threshold = 50;
 float positionX;
 float positionY;
@@ -17,6 +17,13 @@ float radiusProportion = 0.1;
 float speed; 
 float gravity;
 float volume = 0;
+boolean lazy5 = false;
+boolean lazy10 = false;
+
+//time variables
+int savedTime;
+int savedTime2;
+int totalTime = 10000;
 
 int iw, ih;
 
@@ -40,6 +47,7 @@ void setup() {
   positionY = height / 2;
   speed = 0;
   gravity = 0.07;
+  savedTime = millis();
 }
 
 // New frame available from camera
@@ -89,6 +97,45 @@ void draw() {
   // averageMotion is total motion divided by the number of pixels analyzed.
   float avgMotion = totalMotion / video.pixels.length; 
 
+    if (totalMotion > 5000000.0 && lazy10 == false) {
+      meterEfeito(); 
+      volume = totalMotion / 1000000.0;
+      song.amp(volume);
+      lazy5 = false;
+    } else { 
+      if (lazy5 == false && lazy10 == false) {
+        song.amp(0);
+      }
+      // Calculate how much time has passed
+      int passedTime = millis() - savedTime;
+      // Has five seconds passed?
+      if (passedTime > totalTime) {
+        println("5 seconds have passed!");
+        lazy5 = true;  
+          savedTime2 = millis();
+      }
+    }
+
+//weak effect with volume
+if (lazy5 == true) {
+  meterEfeito2();
+  volume = (totalMotion / 1000000.0) / 10;
+  song.amp(volume);
+  // Calculate how much time has passed
+  int passedTime2 = millis() - savedTime2;
+  // Has five seconds passed?
+      if (passedTime2 > totalTime) {
+        lazy5 = false;
+        lazy10 = true;   
+      }
+}
+
+if (lazy10 == true) {
+  meterEfeito3();
+  volume = (totalMotion / 1000000.0) / 2;
+  song.amp(volume);
+}
+
   // Draw a circle based on average motion
   noStroke();
   fill(0);
@@ -117,17 +164,10 @@ void draw() {
         println("Change Direction");
         println(totalMotion);
       }
-    if (totalMotion > 5000000.0) {
-      meterEfeito(); 
-      volume = totalMotion / 1000000.0;
-      song.amp(volume);
-    } else { 
-      song.amp(0);   
-
-    }
 }
 
 void meterEfeito() { 
+savedTime = millis();
 for (int x = 0; x < video.width; x ++ ) {
     for (int y = 0; y < video.height; y ++ ) {
 
@@ -152,6 +192,70 @@ for (int x = 0; x < video.width; x ++ ) {
       } else {
         // everything else is colored
         pixels[loc] = color(221, 23, 27);
+      }
+    }
+  }
+  updatePixels();
+}
+
+void meterEfeito2() { 
+savedTime = millis();
+for (int x = 0; x < video.width; x ++ ) {
+    for (int y = 0; y < video.height; y ++ ) {
+
+      int loc = x + y*video.width;            // Step 1, what is the 1D pixel location
+      color current = video.pixels[loc];      // Step 2, what is the current color
+      color previous = prevFrame.pixels[loc]; // Step 3, what is the previous color
+
+      // Step 4, compare colors (previous vs. current)
+      float r1 = red(current); 
+      float g1 = green(current); 
+      float b1 = blue(current);
+      float r2 = red(previous); 
+      float g2 = green(previous); 
+      float b2 = blue(previous);
+      float diff = dist(r1, g1, b1, r2, g2, b2);
+
+      // Step 5, How different are the colors?
+      // If the color at that pixel has changed, then there is motion at that pixel.
+      if (diff > threshold) { 
+        // change motion to white
+        pixels[loc] = color(255);
+      } else {
+        // everything else is colored
+        pixels[loc] = color(0, 23, 27);
+      }
+    }
+  }
+  updatePixels();
+}
+
+void meterEfeito3() { 
+savedTime = millis();
+for (int x = 0; x < video.width; x ++ ) {
+    for (int y = 0; y < video.height; y ++ ) {
+
+      int loc = x + y*video.width;            // Step 1, what is the 1D pixel location
+      color current = video.pixels[loc];      // Step 2, what is the current color
+      color previous = prevFrame.pixels[loc]; // Step 3, what is the previous color
+
+      // Step 4, compare colors (previous vs. current)
+      float r1 = red(current); 
+      float g1 = green(current); 
+      float b1 = blue(current);
+      float r2 = red(previous); 
+      float g2 = green(previous); 
+      float b2 = blue(previous);
+      float diff = dist(r1, g1, b1, r2, g2, b2);
+
+      // Step 5, How different are the colors?
+      // If the color at that pixel has changed, then there is motion at that pixel.
+      if (diff > threshold) { 
+        // change motion to white
+        pixels[loc] = color(255);
+      } else {
+        // everything else is colored
+        pixels[loc] = color(0, 255, 27);
       }
     }
   }
