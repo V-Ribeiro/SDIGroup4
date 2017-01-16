@@ -2,6 +2,7 @@ import processing.video.*;
 import gab.opencv.*;
 
 //Mirror
+Mirror realmirror;
 PFont font;
 int port = 8000;
 PImage mirror;
@@ -37,7 +38,9 @@ void setup()
   stroke(255);
   cv = new OpenCV(this,640,480);
   cv.loadCascade(OpenCV.CASCADE_FRONTALFACE);
-  pro = new ImgProcessing(cv);  
+  pro = new ImgProcessing(cv);
+  //mirror init
+  realmirror = new Mirror(pro);
   //initialize img
   other = createImage(640, 480, RGB);
   mirror = createImage(640, 480, RGB);
@@ -75,7 +78,6 @@ void captureEvent(Capture m)
 {
   mirrorReady = false;
   m.read();
- 
   mirrorReady = true;
 }
 
@@ -85,26 +87,32 @@ void draw()
       try
       {
         other.copy(receiver.getImage(),0, 0, other.width, other.height, 0, 0, other.width, other.height);
+        realmirror.updateOther(receiver.getImage());
        
       }catch(Exception err)
       {
-      
+      err.getMessage();
       }
         
   }
+  image(other,0,0);
+  
     if(mirrorReady)
     {
+    //put capture in mirror 
+    realmirror.updateCapture(cap);
     mirror.copy(cap, 0, 0, mirror.width, mirror.height, 0, 0, mirror.width, mirror.height);
-    image(mirror,640,0);
+    realmirror.process();
     pro.detect(mirror);
+    //pro.getEdges("canny", mirror)
+    image(realmirror.processed,640,0);
     }
     if(pro.faceDetected)
     {
         fill(240);
         stroke(255,0,0);
-        rect( (float)pro.faceSquare.x + 640, (float)pro.faceSquare.y, (float)pro.faceSquare.getWidth() , (float)pro.faceSquare.getHeight() ); 
+        //rect( (float)pro.faceSquare.x + 640, (float)pro.faceSquare.y, (float)pro.faceSquare.getWidth() , (float)pro.faceSquare.getHeight() ); 
     }
-  image(other,0,0);
   
   
   text(receiver.getFr(), width / 2, height / 2);

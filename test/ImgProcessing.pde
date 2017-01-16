@@ -21,9 +21,15 @@ public class ImgProcessing
     println("nfaces: " + faces.length);
     if(faces.length != 0)
     {
-        println(faces[0].getLocation() + "||" + faces[0].getSize() );
-        faceSquare = faces[0];
+      for(int i =0 ; i < faces.length ; i++)
+      {
+      if(faces[i].getWidth() > 150 && faces[i].getHeight() > 150 )
+      {
+        println(faces[i].getLocation() + "||" + faces[i].getSize() );
+        faceSquare = faces[i];
         faceDetected=true;
+      }
+      }
     } 
   }
   
@@ -48,6 +54,21 @@ public class ImgProcessing
     cv.threshold(30);
     return cv.getOutput();
   }
+  
+  public PImage getEdges(String type, PImage src)
+  {
+    switch(type)
+    {
+      case "canny":
+      {
+        cv.loadImage(src);
+        cv.findCannyEdges(20,75);
+        break;
+      }
+    }
+    return cv.getOutput();
+  }
+  
   
   
   
