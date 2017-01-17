@@ -6,58 +6,52 @@ public class ImgProcessing
 {
     OpenCV cv;
     Rectangle[] faces;
-    Boolean faceDetected = false;
     PImage current,previous;
-    
     Rectangle faceSquare;
     
   public ImgProcessing(OpenCV c){
     cv = c;
   }
   
-  public void detect(PImage img)
+  public Rectangle detect(PImage img)
   {
     cv.loadImage(img);
     faces = cv.detect();
-    println("nfaces: " + faces.length);
     if(faces.length != 0)
     {
       for(int i =0 ; i < faces.length ; i++)
       {
-      if(faces[i].getWidth() > 150 && faces[i].getHeight() > 150 )
-      {
-        println(faces[i].getLocation() + "||" + faces[i].getSize() );
-        faceSquare = faces[i];
-        faceDetected=true;
-      }
+        if(faces[i].getWidth() > 100 && faces[i].getHeight() > 100 )
+        {
+          //println(faces[i].getLocation() + "||" + faces[i].getSize() );
+          faceSquare = faces[i];
+          return faceSquare;
+        }
       }
     } 
+    return null;
   }
   
-  public PImage erode (PImage p)
-  {
+  public PImage erode (PImage p){
     cv.loadImage(p);
     cv.erode();
     return cv.getOutput();
   }
   
-    public PImage dilate (PImage p)
-  {
+    public PImage dilate (PImage p){
     cv.loadImage(p);
     cv.dilate();
     return cv.getOutput();
   }
   
-      public PImage PreProcessImg (PImage p)
-  {
+    public PImage PreProcessImg (PImage p){
     cv.loadImage(p);
     cv.gray();
     cv.threshold(30);
     return cv.getOutput();
   }
   
-  public PImage getEdges(String type, PImage src)
-  {
+  public PImage getEdges(String type, PImage src){
     switch(type)
     {
       case "canny":
@@ -70,17 +64,14 @@ public class ImgProcessing
     return cv.getOutput();
   }
   
-  public void getMotion( PImage previous, PImage current)
-  {
-float totalMotion = 0;
+  public float getMotion( PImage previous, PImage current){
+  float totalMotion = 0;
   // Sum the brightness of each pixel
   for (int i = 0; i < current.pixels.length; i ++ ) {
     // Step 2, what is the current color
     color currentColor = current.pixels[i];
-
     // Step 3, what is the previous color
     color previousColor = previous.pixels[i];
-
     // Step 4, compare colors (previous vs. current)
     float r1 = red(currentColor); 
     float g1 = green(currentColor);
@@ -88,17 +79,17 @@ float totalMotion = 0;
     float r2 = red(previousColor); 
     float g2 = green(previousColor);
     float b2 = blue(previousColor);
-
     // Motion for an individual pixel is the difference between the previous color and current color.
     float diff = dist(r1, g1, b1, r2, g2, b2);
     // totalMotion is the sum of all color differences. 
     totalMotion += diff;
-    
   }
     // averageMotion is total motion divided by the number of pixels analyzed.
   float avgMotion = totalMotion / current.pixels.length; 
-  println("total motion" + totalMotion + "  avgMotion:" + avgMotion);
+  //println("total motion" + totalMotion + "  avgMotion:" + avgMotion);
+  return avgMotion;
   }
+  
   
   
   

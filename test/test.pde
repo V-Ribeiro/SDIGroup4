@@ -3,7 +3,6 @@ import gab.opencv.*;
 
 //Mirror
 Mirror realmirror;
-PFont font;
 int port = 8000;
 PImage mirror;
 Capture cap;
@@ -22,6 +21,7 @@ float fR;
 //
 //Ball stuff
 Ball ball;
+float sensibility ;
 
 // Other images 
 PImage other;
@@ -84,46 +84,53 @@ void captureEvent(Capture m)
 
 void draw()
 {
-  ball = new Ball();
+  
   if (receiver.available()) { 
       try
       {
-        other.copy(receiver.getImage(),0, 0, other.width, other.height, 0, 0, other.width, other.height);
+        other.copy(receiver.getImage(),0, 0, other.width, other.height, 0, 0, other.width, other.height); //deprecated
         realmirror.updateOther(receiver.getImage());
-       
       }catch(Exception err)
       {
       err.getMessage();
-      }
-        
+      }   
   }
-  image(other,0,0);
+  image(other,0,0); // deprecated
   
     if(mirrorReady)
     {
     //put capture in mirror 
     realmirror.updateCapture(cap);
-    realmirror.tool.getMotion(realmirror.previous,realmirror.capture);
-    mirror.copy(cap, 0, 0, mirror.width, mirror.height, 0, 0, mirror.width, mirror.height);
+    //get movement
+    realmirror.getMovement();
+    mirror.copy(cap, 0, 0, mirror.width, mirror.height, 0, 0, mirror.width, mirror.height); // deprecated
     realmirror.process();
-    pro.detect(mirror);
+    realmirror.detectFace();
     //pro.getEdges("canny", mirror)
     image(realmirror.processed,640,0);
     }
-    if(pro.faceDetected)
+    if(realmirror.FaceDetected)
     {
         //fill(240);
         //stroke(255,0,0);
         //rect( (float)pro.faceSquare.x + 640, (float)pro.faceSquare.y, (float)pro.faceSquare.getWidth() , (float)pro.faceSquare.getHeight() ); 
-        println("face center" + pro.faceSquare.getCenterX());
+        float distance = abs((float)(realmirror.face.getCenterX()+640) - ball.xpos) + abs((float)realmirror.face.getCenterY() - ball.ypos);
+        sensibility = distance / 1280;
+        //println("face center" + realmirror.face.getCenterX() + "$$ sensibility:" + sensibility );
+        ball.update(realmirror.face.getLocation(), realmirror.avgMotion);
+    }
+    if(realmirror.avgMotion > 25)
+    {
+      println("Found Motion");
     }
   ball.draw();
   
-  text(receiver.getFr(), width / 2, height / 2);
 }
 
+ 
+    
 
-  void broadcast(PImage img) {
+    void broadcast(PImage img) {
     BufferedImage bimg = new BufferedImage( img.width, img.height, BufferedImage.TYPE_INT_RGB );
     bimg.setAccelerationPriority(1.);
     img.loadPixels();

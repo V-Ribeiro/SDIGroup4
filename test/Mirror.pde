@@ -6,14 +6,16 @@ public class Mirror
   Boolean CapturedBackground = false;
   Boolean CaptureReady = false;
   Boolean FaceDetected = false;
+  Rectangle face;
   int w = 640;
   int h = 480;
+  float avgMotion =0;
   
   
 public Mirror(ImgProcessing t){
-	tool = t;
-    background = createImage(w, h, RGB);
-    subtractedBackground = createImage(w, h, RGB);
+	  tool = t;
+    background = createImage(w, h, RGB); // not used
+    subtractedBackground = createImage(w, h, RGB); // not used
     previous = createImage(w, h, RGB);
     capture = createImage(w, h, RGB);
     other = createImage(w,h,RGB);
@@ -21,23 +23,23 @@ public Mirror(ImgProcessing t){
     display = createImage(w*2, h, RGB);
 }
 
-
-
+    //update previous and current frame for movement calc
     public void updateCapture(PImage cap)
     {
-    previous.copy(capture,0, 0, w, h, 0, 0, w, h);  
-    capture.copy(cap,0, 0, w, h, 0, 0, w, h);
+      previous.copy(capture,0, 0, w, h, 0, 0, w, h);  
+      capture.copy(cap,0, 0, w, h, 0, 0, w, h);
     }
+    
     
     public void process()
     {
     processed.copy(tool.PreProcessImg(capture),0, 0, w, h, 0, 0, w, h);
     }
     
-    public void updateDisplay()
-    {
-    display.copy(capture,0, 0, w, h, 0, 0, w, h);
-    display.copy(other,640, 0, w, h, 0, 0, w, h);
+    //concatenate images
+    public void updateDisplay(){
+      display.copy(capture,0, 0, w, h, 0, 0, w, h);
+      display.copy(other,640, 0, w, h, 0, 0, w, h);
     }
     
     public void updateOther(PImage o)
@@ -47,11 +49,23 @@ public Mirror(ImgProcessing t){
     
     public void detectFace()
     {
-    tool.detect(capture);
+      Rectangle t = tool.detect(capture);
+      if(t != null)
+      {
+        face = t;
+        FaceDetected = true;
+      }
+      else
+      {
+        println("null face");
+      }
+    }
+    public void getMovement()
+    {
+    avgMotion = tool.getMotion(previous,capture);
     }
     
-    
-     
+    /// not used
     public void subtractBackground()
     {
     //subtractedBackground
