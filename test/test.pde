@@ -20,6 +20,8 @@ DatagramSocket ds;
 long time;
 float fR;
 //
+//Ball stuff
+Ball ball;
 
 // Other images 
 PImage other;
@@ -30,20 +32,19 @@ ReceiverThread receiver;
 
 void setup()
 {
-  size(1280, 480);
-  font = loadFont("MyriadPro-Regular-14.vlw");
-  textFont(font, 14);
-  textAlign(CENTER, CENTER);
-  noFill();
-  stroke(255);
+  size(1280, 960);
+
+  ball = new Ball();
+
   cv = new OpenCV(this,640,480);
   cv.loadCascade(OpenCV.CASCADE_FRONTALFACE);
+  
   pro = new ImgProcessing(cv);
   //mirror init
   realmirror = new Mirror(pro);
   //initialize img
-  other = createImage(640, 480, RGB);
-  mirror = createImage(640, 480, RGB);
+  other = createImage(640, 480, RGB); //deprecated
+  mirror = createImage(640, 480, RGB); //deprecated
   
   //cap start
   cap = new Capture(this, 640,480);
@@ -83,6 +84,7 @@ void captureEvent(Capture m)
 
 void draw()
 {
+  ball = new Ball();
   if (receiver.available()) { 
       try
       {
@@ -101,6 +103,7 @@ void draw()
     {
     //put capture in mirror 
     realmirror.updateCapture(cap);
+    realmirror.tool.getMotion(realmirror.previous,realmirror.capture);
     mirror.copy(cap, 0, 0, mirror.width, mirror.height, 0, 0, mirror.width, mirror.height);
     realmirror.process();
     pro.detect(mirror);
@@ -109,11 +112,12 @@ void draw()
     }
     if(pro.faceDetected)
     {
-        fill(240);
-        stroke(255,0,0);
+        //fill(240);
+        //stroke(255,0,0);
         //rect( (float)pro.faceSquare.x + 640, (float)pro.faceSquare.y, (float)pro.faceSquare.getWidth() , (float)pro.faceSquare.getHeight() ); 
+        println("face center" + pro.faceSquare.getCenterX());
     }
-  
+  ball.draw();
   
   text(receiver.getFr(), width / 2, height / 2);
 }

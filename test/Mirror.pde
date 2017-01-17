@@ -2,16 +2,19 @@ import processing.video.*;
 public class Mirror
 {
   ImgProcessing tool;
-  PImage background,subtractedBackground,capture, other, processed,display;
+  PImage background,subtractedBackground,capture, other, processed,display, previous;
   Boolean CapturedBackground = false;
   Boolean CaptureReady = false;
   Boolean FaceDetected = false;
   int w = 640;
   int h = 480;
+  
+  
 public Mirror(ImgProcessing t){
 	tool = t;
     background = createImage(w, h, RGB);
     subtractedBackground = createImage(w, h, RGB);
+    previous = createImage(w, h, RGB);
     capture = createImage(w, h, RGB);
     other = createImage(w,h,RGB);
     processed = createImage(w, h, RGB);
@@ -22,6 +25,7 @@ public Mirror(ImgProcessing t){
 
     public void updateCapture(PImage cap)
     {
+    previous.copy(capture,0, 0, w, h, 0, 0, w, h);  
     capture.copy(cap,0, 0, w, h, 0, 0, w, h);
     }
     
@@ -43,8 +47,9 @@ public Mirror(ImgProcessing t){
     
     public void detectFace()
     {
-    
+    tool.detect(capture);
     }
+    
     
      
     public void subtractBackground()
