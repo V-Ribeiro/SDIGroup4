@@ -44,12 +44,48 @@ public class ImgProcessing
     return cv.getOutput();
   }
   
-    public PImage PreProcessImg (PImage p){
+    public PImage PreProcessImg (PImage p,float s){
     cv.loadImage(p);
-    cv.gray();
-    cv.threshold(30);
+    //cv.gray();
+    cv.threshold(20 + 10 * (int)(1/s) );
+    
     return cv.getOutput();
   }
+  
+  
+  public PImage meterEfeito(PImage recentImage , PImage previousImage) { 
+  int savedTime = millis();
+  float threshold = 270;
+  for (int x = 0; x < recentImage.width; x ++ ) {
+    for (int y = 0; y < recentImage.height; y ++ ) {
+
+      int loc = x + y*recentImage.width;            // Step 1, what is the 1D pixel location
+      color current = recentImage.pixels[loc];      // Step 2, what is the current color
+      color previous = previousImage.pixels[loc]; // Step 3, what is the previous color
+
+      // Step 4, compare colors (previous vs. current)
+      float r1 = red(current); 
+      float g1 = green(current); 
+      float b1 = blue(current);
+      float r2 = red(previous); 
+      float g2 = green(previous); 
+      float b2 = blue(previous);
+      float diff = dist(r1, g1, b1, r2, g2, b2);
+
+      // Step 5, How different are the colors?
+      // If the color at that pixel has changed, then there is motion at that pixel.
+      if (diff > threshold) { 
+        // change motion to white
+        recentImage.pixels[loc] = color(255);
+      } else {
+        // everything else is colored
+        recentImage.pixels[loc] = color(221, 23, 27);
+      }
+    }
+  }
+  return recentImage;
+}
+
   
   public PImage getEdges(String type, PImage src){
     switch(type)
@@ -57,7 +93,7 @@ public class ImgProcessing
       case "canny":
       {
         cv.loadImage(src);
-        cv.findCannyEdges(20,75);
+        cv.findCannyEdges(10,50);
         break;
       }
     }

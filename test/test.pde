@@ -3,7 +3,8 @@ import gab.opencv.*;
 
 //Mirror
 Mirror realmirror;
-int port = 8000;
+int port = 8000;  // where to receive
+int messagePort = 8002;  // where to receive
 PImage mirror;
 Capture cap;
 ImgProcessing pro;
@@ -13,9 +14,10 @@ Boolean mirrorReady = false;
 //mirror must send and receive
 Movie movie;
 String fileName = "parameters.txt";
-String clientIP1;
-int clientPort = 8000; 
+String clientIP1; // where to send
+int clientPort = 8000; // where to send
 DatagramSocket ds; 
+DatagramSocket dsMessage; 
 long time;
 float fR;
 //
@@ -24,10 +26,9 @@ Ball ball;
 float sensibility ;
 
 // Other images 
-PImage other;
+PImage other; //deprecated
 ReceiverThread receiver;
-
-
+MessageReceiverThread messageReceiver;
 
 
 void setup()
@@ -47,13 +48,17 @@ void setup()
   mirror = createImage(640, 480, RGB); //deprecated
   
   //cap start
-  cap = new Capture(this, 640,480);
+  String[] camera =  Capture.list();
+  cap = new Capture(this, camera[0]);
+    
+ // cap = new Capture(this, 640,480);
   cap.start();
   //sender stuff
     String loadParameters[] = loadStrings(fileName);
   clientIP1 = loadParameters[0];
     try {
     ds = new DatagramSocket();
+    dsMessage = new DatagramSocket();
   } 
   catch (SocketException e) {
     e.printStackTrace();
@@ -65,8 +70,9 @@ void setup()
   //
   
   
-  
+  messageReceiver = new MessageReceiverThread(messagePort);
   receiver = new ReceiverThread(port, 640, 480); // hc
+  messageReceiver.start();
   receiver.start();
 }
 
@@ -102,33 +108,51 @@ void draw()
     //put capture in mirror 
     realmirror.updateCapture(cap);
     //get movement
-    realmirror.getMovement();
+        realmirror.getMovement();
+     //decide who has control
+     // weight = lastmovement * sensibility
+     // compare with other latest message  
     mirror.copy(cap, 0, 0, mirror.width, mirror.height, 0, 0, mirror.width, mirror.height); // deprecated
-    realmirror.process();
+    
+    realmirror.process(sensibility,ball);
     realmirror.detectFace();
     //pro.getEdges("canny", mirror)
     image(realmirror.processed,640,0);
     }
     if(realmirror.FaceDetected)
     {
-        //fill(240);
-        //stroke(255,0,0);
-        //rect( (float)pro.faceSquare.x + 640, (float)pro.faceSquare.y, (float)pro.faceSquare.getWidth() , (float)pro.faceSquare.getHeight() ); 
         float distance = abs((float)(realmirror.face.getCenterX()+640) - ball.xpos) + abs((float)realmirror.face.getCenterY() - ball.ypos);
         sensibility = distance / 1280;
+        //println("sensibility:" + sensibility);
         //println("face center" + realmirror.face.getCenterX() + "$$ sensibility:" + sensibility );
         ball.update(realmirror.face.getLocation(), realmirror.avgMotion);
-    }
-    if(realmirror.avgMotion > 25)
-    {
-      println("Found Motion");
+        //broadcastMessage
+        if(realmirror.avgMotion > 25)
+        {
+          println("Found Motion");
+          Message m = new Message(0, realmirror.face.getLocation(), realmirror.avgMotion);
+          broadcastMessage(m);
+        }
+        
     }
   ball.draw();
   
 }
 
  
-    
+  void broadcastMessage(Message m)
+  {
+      byte[] packet = m.encodeMessage();
+      try
+      {
+      ds.send(new DatagramPacket(packet, packet.length, InetAddress.getByName(clientIP1), messagePort));
+      }catch (Exception e){
+      e.printStackTrace();
+      }
+  }
+
+
+
 
     void broadcast(PImage img) {
     BufferedImage bimg = new BufferedImage( img.width, img.height, BufferedImage.TYPE_INT_RGB );
@@ -154,3 +178,5 @@ void draw()
     fR = 1000 / (millis() - (float)time);
     time = millis();
   }
+  
+  

@@ -10,8 +10,8 @@ int rad = 60;        // Width of the shape
 float xpos = 640;
 float ypos= 240;    // Starting position of shape    
 
-float xspeed = 2.8;  // Speed of the shape
-float yspeed = 2.2;  // Speed of the shape
+float xspeed = 6;  // Speed of the shape
+float yspeed = 6;  // Speed of the shape
 
 int xdirection = 0;  // Left or Right
 int ydirection = 0;  // Top to Bottom
@@ -36,16 +36,29 @@ void Ball()
     /// if ball is far, the more reactive the ball is to movemnt
     ///
     //point p is last known position of face
-    println("facex:"+ p.getX() + "  facey:" + p.getY());
-    println("ballx:"+ xpos + "  bally:" + ypos);
-   float xDiff = xpos - (float)p.getX();
+    //println("facex:"+ p.getX() + "  facey:" + p.getY());
+    //println("ballx:"+ xpos + "  bally:" + ypos);
+    float xDiff = xpos - (float)p.getX()-640;
     float yDiff = ypos - (float)p.getY();
-   
-    println("xDiff: " + xDiff + "  yDiff: " +yDiff  );
-    if(xDiff > 0)
+    //println("xDiff: " + xDiff + "  yDiff: " +yDiff  );
+    if(xDiff < 0)
     {
       xdirection = 1;
     }
+    else
+    {
+      xdirection = -1;
+    }
+    
+        if(yDiff < 0)
+    {
+      ydirection = 1;
+    }
+    else
+    {
+      ydirection = -1;
+    }
+    
   }
 
   void draw(){

@@ -10,7 +10,7 @@ class MessageReceiverThread extends Thread {
 
   int port;
   DatagramSocket ds; 
-  byte[] buffer = new byte[65536]; 
+  byte[] buffer = new byte[2000]; 
 
   boolean running;
   boolean available;
@@ -67,7 +67,8 @@ class MessageReceiverThread extends Thread {
       e.printStackTrace();
     } 
     byte[] data = p.getData();
-    //ByteArrayInputStream bais = new ByteArrayInputStream( data );
+    Message m = new Message(data);
+    //m.printMessage();
 
     
     fR = 1000 / (millis() - (float)time);

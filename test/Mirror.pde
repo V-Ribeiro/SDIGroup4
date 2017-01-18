@@ -31,15 +31,34 @@ public Mirror(ImgProcessing t){
     }
     
     
-    public void process()
+    public void process(float s,Ball b)
     {
-    processed.copy(tool.PreProcessImg(capture),0, 0, w, h, 0, 0, w, h);
+      /*
+      if(isOnMirrorSide(b))
+      {
+          processed.copy(tool.dilate(capture),0, 0, w, h, 0, 0, w, h);
+      }
+      else
+      {
+          processed.copy(tool.erode(capture),0, 0, w, h, 0, 0, w, h);
+      }
+      */
+          //processed.copy(tool.PreProcessImg(capture,s),0, 0, w, h, 0, 0, w, h);
+          processed.copy(tool.getEdges("canny",capture),0, 0, w, h, 0, 0, w, h);
     }
     
     //concatenate images
     public void updateDisplay(){
       display.copy(capture,0, 0, w, h, 0, 0, w, h);
       display.copy(other,640, 0, w, h, 0, 0, w, h);
+    }
+    
+    public Boolean isOnMirrorSide(Ball b)
+    {
+    if(b.xpos > 640)
+    return true;
+    else
+    return false;
     }
     
     public void updateOther(PImage o)
@@ -55,11 +74,8 @@ public Mirror(ImgProcessing t){
         face = t;
         FaceDetected = true;
       }
-      else
-      {
-        println("null face");
-      }
     }
+    
     public void getMovement()
     {
     avgMotion = tool.getMotion(previous,capture);

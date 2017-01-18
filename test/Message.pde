@@ -5,21 +5,45 @@ public class Message
   Point face;
   float movement;
   
-  public Message(int t, Point p)
+  public Message(int t, Point p, float m)
   {
     type = t;
     face = p;
+    movement = m;
+  }
+  
+  public Message(byte[] m)
+  {
+    String s = new String(m);
+    println("got:" + s);
+  }
+  
+  public void printMessage()
+  {
+    println("received: " + type );
   }
   
   public byte[] encodeMessage()
   {
-    return new byte[10];
+    String m = "";
+    switch(type)
+    {
+     case 0: {
+       m += "0";
+       m+="|";
+       m += Double.toString(face.getX());
+       m += "|";
+       m += Double.toString(face.getY());
+       m+="|";
+       m += Float.toString(movement);
+       break;
+     }
+    }
+    byte[] ret = new byte[2000];
+    ret = m.getBytes();
+    return ret;
   }
   
-    public String[] decodeMessage()
-  {
-    return new String[10];
-  }
   
 
 }
