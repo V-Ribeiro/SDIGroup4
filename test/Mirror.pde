@@ -13,7 +13,7 @@ public class Mirror
   
   
 public Mirror(ImgProcessing t){
-	  tool = t;
+    tool = t;
     background = createImage(w, h, RGB); // not used
     subtractedBackground = createImage(w, h, RGB); // not used
     previous = createImage(w, h, RGB);
@@ -88,6 +88,6 @@ public Mirror(ImgProcessing t){
     }
     
     public void setBackground(PImage bgd){
-    	background.copy(bgd,0, 0, w, h, 0, 0, w, h);
+      background.copy(bgd,0, 0, w, h, 0, 0, w, h);
     }
 }

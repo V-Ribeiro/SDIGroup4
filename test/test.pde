@@ -76,10 +76,7 @@ void setup()
   receiver.start();
 }
 
-void movieEvent(Movie m) {
-  m.read();
-    broadcast(m);
-}
+
 
 void captureEvent(Capture m)
 {
@@ -116,6 +113,7 @@ void draw()
     
     realmirror.process(sensibility,ball);
     realmirror.detectFace();
+    broadcast(realmirror.processed);
     //pro.getEdges("canny", mirror)
     image(realmirror.processed,640,0);
     }

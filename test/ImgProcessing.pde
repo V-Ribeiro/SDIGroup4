@@ -54,8 +54,7 @@ public class ImgProcessing
   
   
   public PImage meterEfeito(PImage recentImage , PImage previousImage) { 
-  int savedTime = millis();
-  float threshold = 270;
+  float threshold = 20;
   for (int x = 0; x < recentImage.width; x ++ ) {
     for (int y = 0; y < recentImage.height; y ++ ) {
 
