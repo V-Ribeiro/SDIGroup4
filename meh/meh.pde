@@ -25,6 +25,12 @@ int savedTime;
 int savedTime2;
 int totalTime = 10000;
 
+//bubble variables
+int numBalls = 12;
+float spring = 0.05;
+float friction = -0.9;
+Ball[] balls = new Ball[numBalls];
+
 int iw, ih;
 
 void setup() {
@@ -36,6 +42,9 @@ void setup() {
     iw = photo.width;
     ih = photo.height;
     graphicalMask = createGraphics(iw, ih);
+    for (int i = 0; i < numBalls; i++) {
+    balls[i] = new Ball(random(width), random(height), random(30, 70), i, balls);
+  }
     
   size(640, 480);
   // Using the default capture device
@@ -134,6 +143,7 @@ if (lazy10 == true) {
   meterEfeito3();
   volume = (totalMotion / 1000000.0) / 2;
   song.amp(volume);
+          ballSpawn();
 }
 
   // Draw a circle based on average motion
@@ -187,11 +197,12 @@ for (int x = 0; x < video.width; x ++ ) {
       // Step 5, How different are the colors?
       // If the color at that pixel has changed, then there is motion at that pixel.
       if (diff > threshold) { 
-        // change motion to white
-        pixels[loc] = color(255);
-      } else {
-        // everything else is colored
+        // change motion to red
         pixels[loc] = color(221, 23, 27);
+        
+      } else {
+        // everything else is null (new version)
+        //pixels[loc] = color(255);
       }
     }
   }
@@ -219,11 +230,11 @@ for (int x = 0; x < video.width; x ++ ) {
       // Step 5, How different are the colors?
       // If the color at that pixel has changed, then there is motion at that pixel.
       if (diff > threshold) { 
-        // change motion to white
-        pixels[loc] = color(255);
-      } else {
-        // everything else is colored
+        // change motion to dirty green
         pixels[loc] = color(0, 23, 27);
+      } else {
+        // everything else is null (new version)
+        //pixels[loc] = color(255);
       }
     }
   }
@@ -251,13 +262,85 @@ for (int x = 0; x < video.width; x ++ ) {
       // Step 5, How different are the colors?
       // If the color at that pixel has changed, then there is motion at that pixel.
       if (diff > threshold) { 
-        // change motion to white
-        pixels[loc] = color(255);
-      } else {
-        // everything else is colored
+        // change motion to green
         pixels[loc] = color(0, 255, 27);
+      } else {
+        // everything else is null (new version)
+        //pixels[loc] = color(255);
       }
     }
   }
   updatePixels();
+}
+
+void ballSpawn() {
+  for (Ball ball : balls) {
+    ball.collide();
+    ball.move();
+    ball.display();  
+  }
+}
+
+class Ball {
+  
+  float x, y;
+  float diameter;
+  float vx = 0;
+  float vy = 0;
+  int id;
+  Ball[] others;
+ 
+  Ball(float xin, float yin, float din, int idin, Ball[] oin) {
+    x = xin;
+    y = yin;
+    diameter = din;
+    id = idin;
+    others = oin;
+  } 
+  
+  void collide() {
+    for (int i = id + 1; i < numBalls; i++) {
+      float dx = others[i].x - x;
+      float dy = others[i].y - y;
+      float distance = sqrt(dx*dx + dy*dy);
+      float minDist = others[i].diameter/2 + diameter/2;
+      if (distance < minDist) { 
+        float angle = atan2(dy, dx);
+        float targetX = x + cos(angle) * minDist;
+        float targetY = y + sin(angle) * minDist;
+        float ax = (targetX - others[i].x) * spring;
+        float ay = (targetY - others[i].y) * spring;
+        vx -= ax;
+        vy -= ay;
+        others[i].vx += ax;
+        others[i].vy += ay;
+      }
+    }   
+  }
+  
+  void move() {
+    vy += gravity;
+    x += vx;
+    y += vy;
+    if (x + diameter/2 > width) {
+      x = width - diameter/2;
+      vx *= friction; 
+    }
+    else if (x - diameter/2 < 0) {
+      x = diameter/2;
+      vx *= friction;
+    }
+    if (y + diameter/2 > height) {
+      y = height - diameter/2;
+      vy *= friction; 
+    } 
+    else if (y - diameter/2 < 0) {
+      y = diameter/2;
+      vy *= friction;
+    }
+  }
+  
+  void display() {
+    ellipse(x, y, diameter, diameter);
+  }
 }
